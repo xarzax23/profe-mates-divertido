@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Courses from "./pages/Courses";
@@ -12,7 +12,7 @@ import Profe from "./pages/Profe";
 import Videos from "./pages/Videos";
 import Admin from "./pages/Admin";
 import Navbar from "./components/layout/Navbar";
-import { HelmetProvider } from "react-helmet-async";
+
 import { useEffect } from "react";
 import { useAppStore } from "./store/useAppStore";
 
@@ -26,28 +26,24 @@ const App = () => {
   }, [highContrast]);
 
   return (
-    <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <Navbar />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/cursos" element={<Courses />} />
-              <Route path="/cursos/:grade" element={<CourseTopics />} />
-              <Route path="/cursos/:grade/:topicSlug" element={<LessonPage />} />
-              <Route path="/profe" element={<Profe />} />
-              <Route path="/videos" element={<Videos />} />
-              <Route path="/admin" element={<Admin />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/cursos" element={<Courses />} />
+            <Route path="/cursos/:grade" element={<CourseTopics />} />
+            <Route path="/cursos/:grade/:topicSlug" element={<LessonPage />} />
+            <Route path="/profe" element={<Profe />} />
+            <Route path="/videos" element={<Videos />} />
+            <Route path="/admin" element={<Admin />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </TooltipProvider>
       </QueryClientProvider>
-    </HelmetProvider>
   );
 };
 
