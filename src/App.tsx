@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +13,7 @@ import Profe from "./pages/Profe";
 import Videos from "./pages/Videos";
 import Admin from "./pages/Admin";
 import Navbar from "./components/layout/Navbar";
+import { ThemeProvider } from "./components/providers/ThemeProvider";
 
 import { useEffect } from "react";
 import { useAppStore } from "./store/useAppStore";
@@ -26,6 +28,7 @@ const App = () => {
   }, [highContrast]);
 
   return (
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
@@ -44,8 +47,8 @@ const App = () => {
           </Routes>
         </TooltipProvider>
       </QueryClientProvider>
+    </ThemeProvider>
   );
 };
 
 export default App;
-
