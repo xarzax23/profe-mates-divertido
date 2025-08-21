@@ -91,6 +91,7 @@ export async function postChat(args: { grade: Grade; message: string; imageUrl?:
   }
 }
 
+// Function to request solution with parental gate PIN validation
 export async function requestSolution({
   grade,
   message,

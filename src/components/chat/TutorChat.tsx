@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppStore } from "@/store/useAppStore";
 import { ChatMessage, Grade } from "@/types";
+// Import tutor API functions including solution request with PIN validation
 import { postChat, requestSolution } from "@/lib/api";
 import { detectAndSanitizePII } from "@/lib/validators";
 import { toast } from "sonner";
