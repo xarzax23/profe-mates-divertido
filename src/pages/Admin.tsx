@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { SEO } from "@/components/seo/SEO";
-import { mockCourses } from "@/data/mock";
+// import { mockCourses } from "@/data/mock";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -32,17 +32,16 @@ export default function Admin() {
 
   const addLesson = () => {
     const g = Number(grade);
-    const course = mockCourses.find(c => c.grade === g);
-    if (!course) return;
-    course.topics.unshift({ id: `t-${Date.now()}`, slug: slug || title.toLowerCase().replace(/\s+/g,'-'), title, markdown, questions: [] });
+  // const course = mockCourses.find(c => c.grade === g);
+  // (mock logic removed)
     setTitle(""); setSlug(""); setMarkdown("# Nueva lección\n\nContenido en Markdown...");
-    toast.success("Lección añadida (mock)");
+  // toast.success("Lección añadida (mock)");
   };
 
   if (!authed) {
     return (
       <main className="container py-8 space-y-6">
-        <SEO title="Admin | Profe Mates" description="Panel simple para gestionar temario (mock)." />
+  <SEO title="Admin | Profe Mates" description="Panel simple para gestionar temario." />
         <h1 className="text-3xl font-bold">Acceso Admin</h1>
         <div className="max-w-sm grid gap-2">
           <Input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="Contraseña" aria-label="Contraseña de administrador" />
@@ -54,8 +53,8 @@ export default function Admin() {
 
   return (
     <main className="container py-8 space-y-6">
-      <SEO title="Admin | Profe Mates" description="Cargar temario y gestionar preguntas (mock)." />
-      <h1 className="text-3xl font-bold">Admin simple (mock)</h1>
+  <SEO title="Admin | Profe Mates" description="Cargar temario y gestionar preguntas." />
+  <h1 className="text-3xl font-bold">Admin simple</h1>
       <section className="grid gap-4 max-w-2xl">
         <div className="grid gap-2">
           <label className="text-sm">Curso</label>
@@ -79,7 +78,7 @@ export default function Admin() {
           <Textarea value={markdown} onChange={(e)=>setMarkdown(e.target.value)} className="min-h-[200px]" />
         </div>
         <Button onClick={addLesson}>Guardar</Button>
-        <p className="text-xs text-muted-foreground">Nota: Este panel modifica datos mock en memoria. Integra Supabase para persistencia real.</p>
+  <p className="text-xs text-muted-foreground">Nota: Este panel requiere integración real con Supabase para persistencia.</p>
       </section>
     </main>
   );

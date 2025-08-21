@@ -1,68 +1,52 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { getServiceSupabase } from '@/lib/supabase';
-import Fraction from 'fraction.js';
+import type { NextApiRequest, NextApiResponse } from "next";
+import { createClient } from "@supabase/supabase-js";
 
-function normalizeText(text: string) {
-  return text
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/\p{Diacritic}/gu, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
+const sb = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE! // solo en servidor
+);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') return res.status(405).end();
+  if (req.method !== "POST") return res.status(405).end();
+
   const { exerciseId, userResponse } = req.body;
-  if (!exerciseId) return res.status(400).json({ error: 'Missing exerciseId' });
-
-  const supabase = getServiceSupabase();
-  const { data: exercise, error } = await supabase
-    .from('exercises')
-    .select('*')
-    .eq('id', exerciseId)
+  const { data: ex, error } = await sb
+    .from("exercises")
+    .select("type, answer, choices, validators")
+    .eq("id", exerciseId)
     .single();
-  if (error || !exercise) return res.status(404).json({ error: 'Exercise not found' });
 
+  if (error || !ex) return res.status(404).json({ correct: false });
+
+  const validators = (ex.validators as any) || {};
   let correct = false;
-  let feedback = '';
-  const validators = exercise.validators || {};
 
-  switch (exercise.type) {
-    case 'numeric': {
-      const tol = validators.tolerance ?? 0;
-      correct = Math.abs(Number(userResponse) - Number(exercise.answer)) <= tol;
-      break;
+  try {
+    if (ex.type === "numeric") {
+      const expected = Number(ex.answer);
+      const got = Number(userResponse);
+      const tol = typeof validators.tolerance === "number" ? validators.tolerance : 0;
+      correct = Math.abs(got - expected) <= tol;
+    } else if (ex.type === "short_text") {
+      const norm = (s: string) =>
+        (validators.normalize_text
+          ? s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+          : s
+        ).trim();
+      correct = norm(String(userResponse)) === norm(String(ex.answer ?? ""));
+    } else if (ex.type === "multiple_choice") {
+      const correctIds = (ex.choices || [])
+        .filter((c: any) => c.correct)
+        .map((c: any) => String(c.id));
+      correct = correctIds.length ? String(userResponse) === correctIds[0] : false;
+    } else if (ex.type === "multi_select") {
+      const exp = new Set((ex.choices || []).filter((c: any) => c.correct).map((c: any) => String(c.id)));
+      const got = new Set<string>((userResponse as string[]) || []);
+      correct = exp.size === got.size && [...exp].every((id) => got.has(id));
     }
-    case 'fraction': {
-      try {
-        correct = new Fraction(userResponse).equals(new Fraction(exercise.answer));
-      } catch {
-        correct = false;
-      }
-      break;
-    }
-    case 'short_text': {
-      if (validators.normalize_text) {
-        correct = normalizeText(userResponse) === normalizeText(exercise.answer);
-      } else {
-        correct = userResponse === exercise.answer;
-      }
-      break;
-    }
-    case 'multiple_choice': {
-      correct = userResponse === exercise.answer;
-      break;
-    }
-    case 'multi_select': {
-      correct = Array.isArray(userResponse) && Array.isArray(exercise.answer) &&
-        userResponse.length === exercise.answer.length &&
-        userResponse.every((v: any) => exercise.answer.includes(v));
-      break;
-    }
-    default:
-      correct = false;
+  } catch {
+    correct = false;
   }
 
-  res.status(200).json({ correct, feedback });
+  return res.status(200).json({ correct });
 }
