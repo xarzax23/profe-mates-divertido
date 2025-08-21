@@ -1,25 +1,18 @@
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { supabaseBrowser } from "@/lib/supabase";
+import { Link, useParams } from "react-router-dom";
+import { supabase } from "../../lib/supabase";
 
 export default function GradeIndex() {
+  const { grade } = useParams();
   const [items, setItems] = useState<any[]>([]);
-  const [grade, setGrade] = useState<number | null>(null);
 
   useEffect(() => {
-    const parts = window.location.pathname.split("/").filter(Boolean);
-    const g = Number(parts[1]);
-    setGrade(Number.isFinite(g) ? g : null);
-  }, []);
-
-  useEffect(() => {
+    if (!grade) return;
     (async () => {
-      if (!grade) return;
-      const sb = supabaseBrowser();
-      const { data } = await sb
+      const { data } = await supabase
         .from("lessons")
         .select("topic_slug,title")
-        .eq("grade", grade)
+        .eq("grade", Number(grade))
         .order("topic_slug", { ascending: true });
       setItems(data || []);
     })();
@@ -31,7 +24,7 @@ export default function GradeIndex() {
       <ul className="list-disc pl-6">
         {items.map((it) => (
           <li key={it.topic_slug}>
-            <Link className="text-blue-600 underline" href={`/cursos/${grade}/${it.topic_slug}`}>
+            <Link className="text-blue-600 underline" to={`/cursos/${grade}/${it.topic_slug}`}>
               {it.title}
             </Link>
           </li>

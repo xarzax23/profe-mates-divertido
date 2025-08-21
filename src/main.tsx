@@ -1,13 +1,18 @@
-import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import { HelmetProvider } from 'react-helmet-async'
-import App from './App.tsx'
-import './index.css'
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import CourseView from "./pages/CourseView";
+import Index from "./pages/Index";
+import "./index.css";
 
-createRoot(document.getElementById("root")!).render(
-  <HelmetProvider>
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/cursos/:grade/:topic" element={<CourseView />} />
+        {/* Puedes agregar aquí más rutas, como el índice de cursos por grado, etc. */}
+      </Routes>
     </BrowserRouter>
-  </HelmetProvider>
+  </React.StrictMode>
 );
