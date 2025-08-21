@@ -2,6 +2,15 @@ import { mockCourses } from "@/data/mock";
 import { useAppStore } from "@/store/useAppStore";
 import { ChatMessage, Course, Grade, Topic, VideoJob } from "@/types";
 import { systemTutor, videoScript } from "@/lib/prompts";
+import { supabase } from "@/integrations/supabase/client";
+
+export interface TutorResponse {
+  pistas: string[];
+  pasos: string[];
+  repregunta: string;
+  solucion?: string;
+  error?: string;
+}
 
 const wait = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
@@ -27,18 +36,102 @@ export async function getTopic(grade: number, slug: string): Promise<Topic | und
 
 export async function postChat(args: { grade: Grade; message: string; imageUrl?: string; existing?: ChatMessage[]; }): Promise<ChatMessage[]> {
   const { grade, message, imageUrl, existing = [] } = args;
-  const now = Date.now();
-  const userMsg: ChatMessage = { id: `m-${now}`, role: 'user', content: message, imageUrl, timestamp: now };
-  const store = useAppStore.getState();
-  const start = [...existing, userMsg];
-  useAppStore.getState().setChatForGrade(grade, start);
+  const userMessage: ChatMessage = {
+    id: crypto.randomUUID(),
+    role: "user",
+    content: message,
+    imageUrl,
+    timestamp: Date.now(),
+  };
 
-  await wait(600);
-  const assistantText = `Hola, soy tu profe de ${grade}º. ${systemTutor(grade)}\n\nVoy a darte una pista primero: piensa qué operación necesitas. ¿Suma, resta, multiplicación o división?`;
-  const assistantMsg: ChatMessage = { id: `m-${now+1}`, role: 'assistant', content: assistantText, timestamp: Date.now() };
-  const next = [...start, assistantMsg];
-  store.setChatForGrade(grade, next);
-  return next;
+  try {
+    const { data, error } = await supabase.functions.invoke('tutor', {
+      body: {
+        grade,
+        message,
+        imageUrl,
+        requestSolution: false
+      }
+    });
+
+    if (error) throw error;
+
+    const response = data as TutorResponse;
+    
+    let assistantContent = "";
+    if (response.pistas?.length) {
+      assistantContent += "💡 **Pistas:**\n" + response.pistas.map(p => `• ${p}`).join('\n') + "\n\n";
+    }
+    if (response.pasos?.length) {
+      assistantContent += "📝 **Pasos sugeridos:**\n" + response.pasos.map((p, i) => `${i + 1}. ${p}`).join('\n') + "\n\n";
+    }
+    if (response.repregunta) {
+      assistantContent += "🤔 **Pregunta para ti:**\n" + response.repregunta;
+    }
+
+    const assistantMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content: assistantContent.trim() || "Te ayudo con este ejercicio paso a paso.",
+      timestamp: Date.now(),
+    };
+
+    return [...existing, userMessage, assistantMessage];
+  } catch (error) {
+    console.error('Error calling tutor API:', error);
+    
+    const assistantMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content: "Lo siento, hubo un problema técnico. ¿Puedes intentar de nuevo?",
+      timestamp: Date.now(),
+    };
+
+    return [...existing, userMessage, assistantMessage];
+  }
+}
+
+export async function requestSolution({
+  grade,
+  message,
+  imageUrl,
+  parentPin
+}: {
+  grade: Grade;
+  message: string;
+  imageUrl?: string;
+  parentPin: string;
+}): Promise<{ success: boolean; solution?: string; error?: string }> {
+  try {
+    const { data, error } = await supabase.functions.invoke('tutor', {
+      body: {
+        grade,
+        message,
+        imageUrl,
+        requestSolution: true,
+        parentPin
+      }
+    });
+
+    if (error) throw error;
+
+    const response = data as TutorResponse;
+    
+    if (response.error) {
+      return { success: false, error: response.error };
+    }
+
+    return { 
+      success: true, 
+      solution: response.solucion 
+    };
+  } catch (error) {
+    console.error('Error requesting solution:', error);
+    return { 
+      success: false, 
+      error: 'Error técnico. Inténtalo de nuevo.' 
+    };
+  }
 }
 
 export async function createVideoJob(args: { grade: Grade; topicId?: string; prompt?: string; }): Promise<{ jobId: string }> {

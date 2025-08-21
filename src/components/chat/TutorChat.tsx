@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppStore } from "@/store/useAppStore";
 import { ChatMessage, Grade } from "@/types";
-import { postChat } from "@/lib/api";
+import { postChat, requestSolution } from "@/lib/api";
 import { detectAndSanitizePII } from "@/lib/validators";
 import { toast } from "sonner";
+import { ParentalGate } from "./ParentalGate";
+import { Shield, Eye } from "lucide-react";
 
 export function TutorChat() {
   const [grade, setGrade] = useState<Grade>(1);
@@ -15,6 +17,11 @@ export function TutorChat() {
   const setChat = useAppStore(s => s.setChatForGrade);
   const [input, setInput] = useState("");
   const [imageUrl, setImageUrl] = useState<string | undefined>();
+  const [lastQuery, setLastQuery] = useState<{ message: string; imageUrl?: string } | null>(null);
+  const [solution, setSolution] = useState<string | null>(null);
+  const [showParentalGate, setShowParentalGate] = useState(false);
+  const [isLoadingSolution, setIsLoadingSolution] = useState(false);
+  const [parentGateError, setParentGateError] = useState<string>();
   const dropRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -40,9 +47,53 @@ export function TutorChat() {
     if (!input.trim() && !imageUrl) return;
     const { hasPII, sanitized } = detectAndSanitizePII(input);
     if (hasPII) toast.warning("Hemos ocultado posibles datos personales.");
+    
+    // Store the query for potential solution request
+    setLastQuery({ message: sanitized, imageUrl });
+    
     const updated = await postChat({ grade, message: sanitized, imageUrl, existing: messages });
     setChat(grade, updated);
     setInput("");
+    setSolution(null); // Reset solution when new question is asked
+  };
+
+  const handleRequestSolution = () => {
+    setParentGateError(undefined);
+    setShowParentalGate(true);
+  };
+
+  const handleParentalGateSubmit = async (pin: string) => {
+    if (!lastQuery) return;
+    
+    setIsLoadingSolution(true);
+    setParentGateError(undefined);
+    
+    try {
+      const result = await requestSolution({
+        grade,
+        message: lastQuery.message,
+        imageUrl: lastQuery.imageUrl,
+        parentPin: pin
+      });
+
+      if (result.success && result.solution) {
+        setSolution(result.solution);
+        setShowParentalGate(false);
+        toast.success("Solución desbloqueada");
+      } else {
+        setParentGateError(result.error || "PIN incorrecto");
+      }
+    } catch (error) {
+      setParentGateError("Error técnico. Inténtalo de nuevo.");
+    } finally {
+      setIsLoadingSolution(false);
+    }
+  };
+
+  const handleParentalGateClose = () => {
+    setShowParentalGate(false);
+    setParentGateError(undefined);
+    setIsLoadingSolution(false);
   };
 
   return (
@@ -71,6 +122,42 @@ export function TutorChat() {
         </CardContent>
       </Card>
 
+      {/* Solution Section with Parental Gate */}
+      {lastQuery && (
+        <Card className="border-amber-200 bg-amber-50/50">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-amber-800">
+              <Shield className="h-5 w-5" />
+              ¿Necesitas la solución?
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {!solution ? (
+              <div className="space-y-3">
+                <p className="text-sm text-amber-700">
+                  El modo adulto te permite ver la respuesta completa. Es importante que primero intentes resolver el ejercicio con las pistas.
+                </p>
+                <Button 
+                  onClick={handleRequestSolution}
+                  variant="outline"
+                  className="border-amber-300 text-amber-800 hover:bg-amber-100"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Introducir PIN de adulto
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <h4 className="font-medium text-amber-800">Solución completa:</h4>
+                <div className="p-3 rounded-md bg-white border border-amber-200">
+                  <p className="text-sm whitespace-pre-wrap">{solution}</p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-2">
         <div ref={dropRef} className="rounded-md border border-dashed p-3 text-sm text-muted-foreground" aria-label="Zona para arrastrar y soltar imagen">
           Arrastra y suelta una imagen aquí o usa la cámara:
@@ -85,6 +172,14 @@ export function TutorChat() {
           <Button variant="secondary" onClick={() => setInput((v) => (v ? v + "\n\nDame pistas" : "Dame pistas"))}>Dame pistas</Button>
         </div>
       </div>
+
+      <ParentalGate
+        isOpen={showParentalGate}
+        onClose={handleParentalGateClose}
+        onSubmit={handleParentalGateSubmit}
+        isLoading={isLoadingSolution}
+        error={parentGateError}
+      />
     </div>
   );
 }
