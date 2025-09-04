@@ -1,0 +1,31 @@
+{
+  "id": "robot-basico-1",
+  "type": "game",
+  "template": "robot-grid",
+  "title": "Llega a la estrella",
+  "instructions": "Usa mover y girar para llegar a la meta ⭐",
+  "grid": {
+    "rows": 5,
+    "cols": 5,
+    "start": { "r": 4, "c": 0, "dir": "E" },
+    "goal": { "r": 4, "c": 4 },
+    "walls": [{ "r": 4, "c": 2 }]
+  },
+  "toolbox": ["MOVE_FORWARD", "TURN_LEFT", "TURN_RIGHT", "REPEAT"],
+  "rules": {
+    "maxSteps": 20,
+    "allowStepMode": true
+  },
+  "successCriteria": {
+    "reachGoal": true,
+    "maxSteps": 20
+  },
+  "hints": [
+    "Gira antes del obstáculo.",
+    "Prueba con un bloque REPEAT para avanzar varios."
+  ],
+  "feedback": {
+    "correct": ["¡Genial!"],
+    "incorrect": ["¡Ups! Hay una pared."]
+  }
+}

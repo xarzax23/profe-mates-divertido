@@ -1,0 +1,20 @@
+{
+  "id": "memory-historia-1",
+  "type": "game",
+  "template": "memory",
+  "title": "Historia: eventos y fechas",
+  "instructions": "Empareja cada evento histórico con su año.",
+  "cards": [
+    { "id": "h1", "key": "1492", "face": { "label": "Llegada de Colón a América" } },
+    { "id": "h2", "key": "1492", "face": { "label": "1492" } },
+    { "id": "h3", "key": "1789", "face": { "label": "Revolución Francesa" } },
+    { "id": "h4", "key": "1789", "face": { "label": "1789" } },
+    { "id": "h5", "key": "1914", "face": { "label": "Inicio I Guerra Mundial" } },
+    { "id": "h6", "key": "1914", "face": { "label": "1914" } },
+    { "id": "h7", "key": "1989", "face": { "label": "Caída del Muro de Berlín" } },
+    { "id": "h8", "key": "1989", "face": { "label": "1989" } }
+  ],
+  "rules": { "shuffle": true, "previewMs": 0, "timeLimitSeconds": 90 },
+  "feedback": { "correct": ["¡Correcto!"], "incorrect": ["Fíjate en la cronología."], "complete": ["¡Buen repaso histórico!"] },
+  "hints": ["Relaciona evento y siglo.", "Piensa si fue antes o después de 1900.", "Recuerda lo que viste en clase."]
+}

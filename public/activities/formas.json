@@ -1,0 +1,25 @@
+{
+  "id": "demo-select-3",
+  "type": "game",
+  "template": "select-correct",
+  "title": "Formas básicas",
+  "instructions": "Elige la forma pedida.",
+  "question": "Selecciona el triángulo",
+  "choices": [
+    { "label": "Círculo" },
+    { "label": "Cuadrado" },
+    { "label": "Triángulo" },
+    { "label": "Rectángulo" }
+  ],
+  "correctIndex": 2,
+  "shuffle": true,
+  "feedback": {
+    "correct": ["¡Perfecto!"],
+    "incorrect": ["Revisa cuántos lados tiene."]
+  },
+  "hints": [
+    "Busca la figura con 3 lados.",
+    "No tiene lados curvos.",
+    "Parece una montaña."
+  ]
+}

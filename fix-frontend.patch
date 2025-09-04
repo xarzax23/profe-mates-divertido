@@ -1,0 +1,321 @@
+*** Begin Patch
+*** Add File: src/lib/supabase.ts
++import { createClient } from "@supabase/supabase-js";
++
++// Vite: asegúrate de tener .env con VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY
++export const supabase = createClient(
++  import.meta.env.VITE_SUPABASE_URL!,
++  import.meta.env.VITE_SUPABASE_ANON_KEY!
++);
+
+*** End Patch
+*** Begin Patch
+*** Add File: src/components/ExerciseInline.tsx
++import { useMemo, useState } from "react";
++import Fraction from "fraction.js";
++
++type Choice = { id: string; label_md: string; correct?: boolean };
++type Exercise = {
++  id: string;
++  type: "numeric" | "fraction" | "short_text" | "multiple_choice" | "multi_select";
++  stimulus_md: string;
++  choices?: Choice[];
++  answer?: string | null;
++  validators?: Record<string, any> | null;
++};
++
++function normalizeText(s: string) {
++  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
++}
++function isFractionEq(a: string, b: string) {
++  try {
++    return new Fraction(a).equals(new Fraction(b));
++  } catch {
++    return false;
++  }
++}
++
++export default function ExerciseInline({ ex }: { ex: Exercise }) {
++  const [value, setValue] = useState<any>(ex.type === "multi_select" ? [] : "");
++  const [status, setStatus] = useState<"idle" | "ok" | "ko">("idle");
++  const html = useMemo(() => ({ __html: ex.stimulus_md }), [ex.stimulus_md]);
++
++  function check() {
++    const v = ex.validators || {};
++    let correct = false;
++    try {
++      if (ex.type === "numeric") {
++        const tol = typeof v.tolerance === "number" ? v.tolerance : 0;
++        correct = Math.abs(Number(value) - Number(ex.answer)) <= tol;
++      } else if (ex.type === "fraction") {
++        correct = isFractionEq(String(value), String(ex.answer ?? ""));
++      } else if (ex.type === "short_text") {
++        const got = v.normalize_text ? normalizeText(String(value)) : String(value).trim();
++        const exp = v.normalize_text ? normalizeText(String(ex.answer ?? "")) : String(ex.answer ?? "").trim();
++        correct = got === exp;
++      } else if (ex.type === "multiple_choice") {
++        const ids = (ex.choices || []).filter((c) => c.correct).map((c) => String(c.id));
++        correct = ids.length ? String(value) === ids[0] : false;
++      } else if (ex.type === "multi_select") {
++        const exp = (ex.choices || []).filter((c) => c.correct).map((c) => String(c.id)).sort().join("|");
++        const got = Array.isArray(value) ? value.map(String).sort().join("|") : "";
++        correct = exp === got;
++      }
++    } catch {
++      correct = false;
++    }
++    setStatus(correct ? "ok" : "ko");
++  }
++
++  return (
++    <div className="border rounded-lg p-4 bg-white space-y-3">
++      <div className="flex items-start justify-between">
++        <div dangerouslySetInnerHTML={html} />
++        {status === "ok" && <span className="text-green-600 font-semibold">¡Correcto!</span>}
++        {status === "ko" && <span className="text-red-600 font-semibold">Sigue intentando</span>}
++      </div>
++
++      {(ex.type === "numeric" || ex.type === "fraction" || ex.type === "short_text") && (
++        <input
++          className="border rounded px-2 py-1"
++          value={value}
++          onChange={(e) => setValue(e.target.value)}
++          placeholder="Tu respuesta"
++        />
++      )}
++
++      {ex.type === "multiple_choice" && (
++        <div className="space-y-2">
++          {ex.choices?.map((c) => (
++            <label key={c.id} className="flex gap-2 items-center">
++              <input
++                type="radio"
++                name={ex.id}
++                value={c.id}
++                checked={String(value) === String(c.id)}
++                onChange={(e) => setValue(e.target.value)}
++              />
++              <span dangerouslySetInnerHTML={{ __html: c.label_md }} />
++            </label>
++          ))}
++        </div>
++      )}
++
++      {ex.type === "multi_select" && (
++        <div className="space-y-2">
++          {ex.choices?.map((c) => {
++            const id = String(c.id);
++            const checked = (value as string[]).includes(id);
++            return (
++              <label key={id} className="flex gap-2 items-center">
++                <input
++                  type="checkbox"
++                  checked={checked}
++                  onChange={(e) => {
++                    const s = new Set<string>(value);
++                    e.target.checked ? s.add(id) : s.delete(id);
++                    setValue(Array.from(s));
++                  }}
++                />
++                <span dangerouslySetInnerHTML={{ __html: c.label_md }} />
++              </label>
++            );
++          })}
++        </div>
++      )}
++
++      <button className="bg-blue-600 text-white px-3 py-1 rounded" onClick={check}>
++        Comprobar
++      </button>
++    </div>
++  );
++}
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/pages/Lecciones.tsx
++import { useEffect, useState } from "react";
++import { Link } from "react-router-dom";
++import { supabase } from "../lib/supabase";
++
++type Row = { grade: number; topic_slug: string; title: string };
++
++export default function Lecciones() {
++  const [rows, setRows] = useState<Row[]>([]);
++  const [loading, setLoading] = useState(true);
++
++  useEffect(() => {
++    (async () => {
++      setLoading(true);
++      const { data, error } = await supabase
++        .from("lessons")
++        .select("grade, topic_slug, title")
++        .order("grade", { ascending: true })
++        .order("topic_slug", { ascending: true });
++      if (!error && data) setRows(data as Row[]);
++      setLoading(false);
++    })();
++  }, []);
++
++  const byGrade = rows.reduce<Record<number, Row[]>>((acc, r) => {
++    (acc[r.grade] ||= []).push(r);
++    return acc;
++  }, {});
++
++  if (loading) return <div className="p-6">Cargando…</div>;
++  if (rows.length === 0) return <div className="p-6">No hay lecciones en Supabase.</div>;
++
++  return (
++    <div className="max-w-3xl mx-auto p-6 space-y-8">
++      <h1 className="text-2xl font-bold">Lecciones</h1>
++      {Object.keys(byGrade)
++        .sort((a, b) => Number(a) - Number(b))
++        .map((g) => (
++          <section key={g} className="space-y-2">
++            <h2 className="text-xl font-semibold">{g}º Primaria</h2>
++            <ul className="list-disc pl-6">
++              {byGrade[Number(g)].map((r) => (
++                <li key={r.topic_slug}>
++                  <Link className="text-blue-600 underline" to={`/cursos/${g}/${r.topic_slug}`}>
++                    {r.title}
++                  </Link>
++                </li>
++              ))}
++            </ul>
++          </section>
++        ))}
++    </div>
++  );
++}
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/pages/CourseView.tsx
++import { useEffect, useState } from "react";
++import { useParams } from "react-router-dom";
++import { supabase } from "../lib/supabase";
++import ExerciseInline from "../components/ExerciseInline";
++
++type Lesson = {
++  id: string;
++  title: string;
++  concept_md: string;
++  worked_example_prompt_md: string;
++  worked_example_steps_md: string[];
++};
++
++export default function CourseView() {
++  const { grade, topic } = useParams();
++  const [lesson, setLesson] = useState<Lesson | null>(null);
++  const [exs, setExs] = useState<any[]>([]);
++  const [loading, setLoading] = useState(true);
++
++  useEffect(() => {
++    (async () => {
++      if (!grade || !topic) return;
++      setLoading(true);
++      const { data: l } = await supabase
++        .from("lessons")
++        .select("*")
++        .eq("grade", Number(grade))
++        .eq("topic_slug", topic)
++        .maybeSingle();
++      setLesson(l as Lesson);
++      if (l?.id) {
++        const { data: e } = await supabase
++          .from("exercises")
++          .select("*")
++          .eq("lesson_id", l.id)
++          .order("ex_order", { ascending: true });
++        setExs(e || []);
++      } else {
++        setExs([]);
++      }
++      setLoading(false);
++    })();
++  }, [grade, topic]);
++
++  if (loading) return <div className="p-6">Cargando…</div>;
++  if (!lesson) return <div className="p-6">No se encontró la lección en Supabase.</div>;
++
++  return (
++    <div className="max-w-3xl mx-auto space-y-8 p-6">
++      <section className="space-y-2">
++        <h1 className="text-2xl font-bold">{lesson.title}</h1>
++        <div dangerouslySetInnerHTML={{ __html: lesson.concept_md }} />
++      </section>
++      <section className="space-y-2">
++        <h2 className="text-xl font-semibold">Ejemplo resuelto</h2>
++        <div dangerouslySetInnerHTML={{ __html: lesson.worked_example_prompt_md }} />
++        {Array.isArray(lesson.worked_example_steps_md) &&
++          lesson.worked_example_steps_md.map((s, i) => (
++            <div key={i} className="text-sm bg-slate-50 border rounded p-2" dangerouslySetInnerHTML={{ __html: s }} />
++          ))}
++      </section>
++      <section className="space-y-3">
++        <h2 className="text-xl font-semibold">Práctica</h2>
++        {exs.length === 0 && <div>No hay ejercicios en esta lección.</div>}
++        {exs.map((ex) => (
++          <ExerciseInline key={ex.id} ex={ex} />
++        ))}
++      </section>
++    </div>
++  );
++}
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/App.tsx
++import { Link, Route, Routes } from "react-router-dom";
++import Lecciones from "./pages/Lecciones";
++import CourseView from "./pages/CourseView";
++
++export default function App() {
++  return (
++    <div className="min-h-screen bg-background text-foreground">
++      <header className="border-b">
++        <div className="max-w-5xl mx-auto p-4 flex items-center gap-4">
++          <Link to="/" className="font-bold">Profe Mates</Link>
++          <nav className="flex gap-4">
++            <Link className="text-blue-600 underline" to="/lecciones">Lecciones</Link>
++          </nav>
++        </div>
++      </header>
++      <main className="max-w-5xl mx-auto p-4">
++        <Routes>
++          <Route path="/" element={<Lecciones />} />
++          <Route path="/lecciones" element={<Lecciones />} />
++          <Route path="/cursos/:grade/:topic" element={<CourseView />} />
++          <Route path="*" element={<div>Página no encontrada.</div>} />
++        </Routes>
++      </main>
++    </div>
++  );
++}
++
+*** End Patch
+*** Begin Patch
+*** Update File: src/main.tsx
+@@
+-import React from "react";
+-import ReactDOM from "react-dom/client";
+-import "./index.css";
+-import App from "./App";
++import React from "react";
++import ReactDOM from "react-dom/client";
++import { BrowserRouter } from "react-router-dom";
++import { HelmetProvider } from "react-helmet-async";
++import "./index.css";
++import App from "./App";
+ 
+ ReactDOM.createRoot(document.getElementById("root")!).render(
+   <React.StrictMode>
+-    <App />
++    <HelmetProvider>
++      <BrowserRouter>
++        <App />
++      </BrowserRouter>
++    </HelmetProvider>
+   </React.StrictMode>
+ );
+*** End Patch

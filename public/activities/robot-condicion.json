@@ -1,0 +1,24 @@
+{
+  "id": "robot-cond-1",
+  "type": "game",
+  "template": "robot-grid",
+  "title": "Recoge todas las monedas",
+  "instructions": "Usa IF para decidir si avanzar.",
+  "grid": {
+    "rows": 6,
+    "cols": 6,
+    "start": { "r": 5, "c": 0, "dir": "E" },
+    "goal": { "r": 5, "c": 5 },
+    "walls": [{ "r": 5, "c": 3 }, { "r": 4, "c": 3 }],
+    "coins": [{ "r": 5, "c": 2 }, { "r": 3, "c": 3 }]
+  },
+  "toolbox": ["MOVE_FORWARD", "TURN_LEFT", "TURN_RIGHT", "REPEAT", "IF_PATH_AHEAD"],
+  "successCriteria": {
+    "reachGoal": true,
+    "collectAllCoins": true
+  },
+  "hints": [
+    "Si hay pared delante, ¿qué haces?",
+    "Usa REPEAT para no repetir bloques."
+  ]
+}

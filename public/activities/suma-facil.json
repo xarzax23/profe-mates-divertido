@@ -1,0 +1,25 @@
+{
+  "id": "demo-select-2",
+  "type": "game",
+  "template": "select-correct",
+  "title": "Sumas hasta 10",
+  "instructions": "Elige el resultado correcto.",
+  "question": "3 + 4 = ?",
+  "choices": [
+    { "label": "6" },
+    { "label": "7" },
+    { "label": "8" },
+    { "label": "9" }
+  ],
+  "correctIndex": 1,
+  "shuffle": true,
+  "feedback": {
+    "correct": ["¡Eso es!", "¡Lo clavaste!"],
+    "incorrect": ["Piensa en 3 y cuenta 4 más."]
+  },
+  "hints": [
+    "Cuenta con los dedos: 3... y suma 4 más.",
+    "3 + 3 = 6, suma uno más.",
+    "Mira la recta numérica imaginaria."
+  ]
+}

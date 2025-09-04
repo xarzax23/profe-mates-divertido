@@ -1,0 +1,25 @@
+{
+  "id": "demo-select-1",
+  "type": "game",
+  "template": "select-correct",
+  "title": "¿Cuál es el número 7?",
+  "instructions": "Toca el globo que muestra el número siete.",
+  "question": "Selecciona el 7",
+  "choices": [
+    { "label": "5" },
+    { "label": "7" },
+    { "label": "9" },
+    { "label": "2" }
+  ],
+  "correctIndex": 1,
+  "shuffle": true,
+  "feedback": {
+    "correct": ["¡Genial!", "¡Buen ojo!"],
+    "incorrect": ["Casi... fíjate bien."]
+  },
+  "hints": [
+    "Cuenta con los dedos hasta llegar al número.",
+    "El 7 es mayor que 5 y menor que 9.",
+    "Busca el que está entre 6 y 8."
+  ]
+}

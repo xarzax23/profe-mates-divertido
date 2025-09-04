@@ -1,0 +1,24 @@
+{
+  "id": "drag-formas-1",
+  "type": "game",
+  "template": "drag-match",
+  "title": "Formas básicas",
+  "instructions": "Arrastra cada nombre a su forma.",
+  "items": [
+    { "id": "i-circulo", "key": "circulo", "label": "Círculo" },
+    { "id": "i-cuadrado", "key": "cuadrado", "label": "Cuadrado" },
+    { "id": "i-triangulo", "key": "triangulo", "label": "Triángulo" }
+  ],
+  "targets": [
+    { "id": "t-triangulo", "key": "triangulo", "label": "▲" },
+    { "id": "t-cuadrado", "key": "cuadrado", "label": "■" },
+    { "id": "t-circulo", "key": "circulo", "label": "●" }
+  ],
+  "rules": { "shuffle": true },
+  "feedback": { "correct": ["¡Perfecto!"], "incorrect": ["Fíjate en los lados."] },
+  "hints": [
+    "El triángulo tiene 3 lados.",
+    "El cuadrado tiene 4 lados iguales.",
+    "El círculo no tiene lados."
+  ]
+}

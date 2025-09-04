@@ -1,0 +1,24 @@
+{
+  "id": "drag-sumas-10-1",
+  "type": "game",
+  "template": "drag-match",
+  "title": "Sumas hasta 10",
+  "instructions": "Empareja cada suma con su resultado.",
+  "items": [
+    { "id": "i-2-3", "key": "5", "label": "2 + 3" },
+    { "id": "i-1-6", "key": "7", "label": "1 + 6" },
+    { "id": "i-4-4", "key": "8", "label": "4 + 4" }
+  ],
+  "targets": [
+    { "id": "t-8", "key": "8", "label": "8" },
+    { "id": "t-5", "key": "5", "label": "5" },
+    { "id": "t-7", "key": "7", "label": "7" }
+  ],
+  "rules": { "shuffle": true },
+  "feedback": { "correct": ["¡Eso es!"], "incorrect": ["Piensa la suma paso a paso."] },
+  "hints": [
+    "Cuenta con los dedos si te ayuda.",
+    "Descompón: 4 + 4 = 8; 2 + 3 = 5.",
+    "Busca primero la suma más fácil."
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "drag-num-cant-1",
+  "type": "game",
+  "template": "drag-match",
+  "title": "Números y cantidades",
+  "instructions": "Arrastra cada número hasta la cantidad correcta.",
+  "items": [
+    { "id": "i-5", "key": "5", "label": "5" },
+    { "id": "i-3", "key": "3", "label": "3" },
+    { "id": "i-7", "key": "7", "label": "7" }
+  ],
+  "targets": [
+    { "id": "t-3", "key": "3", "label": "🍎🍎🍎" },
+    { "id": "t-7", "key": "7", "label": "⭐️⭐️⭐️⭐️⭐️⭐️⭐️" },
+    { "id": "t-5", "key": "5", "label": "🐞🐞🐞🐞🐞" }
+  ],
+  "rules": { "shuffle": true },
+  "feedback": {
+    "correct": ["¡Muy bien!", "¡Genial!"],
+    "incorrect": ["Prueba de nuevo observando la cantidad."],
+    "pairCorrect": ["¡Pareja correcta!"]
+  },
+  "hints": [
+    "Cuenta en voz alta los iconos.",
+    "Empieza por la cantidad más fácil de reconocer.",
+    "Descarta las que no coinciden."
+  ]
+}

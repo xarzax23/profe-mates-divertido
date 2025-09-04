@@ -1,0 +1,34 @@
+{
+  "id": "memory-vocab-1",
+  "type": "game",
+  "template": "memory",
+  "title": "Vocabulario: Frutas",
+  "instructions": "Empareja cada palabra con su imagen.",
+  "cards": [
+    { "id": "c1", "key": "apple",  "face": { "label": "apple" } },
+    { "id": "c2", "key": "apple",  "face": { "label": "🍎 Manzana" } },
+    { "id": "c3", "key": "banana", "face": { "label": "banana" } },
+    { "id": "c4", "key": "banana", "face": { "label": "🍌 Plátano" } },
+    { "id": "c5", "key": "grapes", "face": { "label": "grapes" } },
+    { "id": "c6", "key": "grapes", "face": { "label": "🍇 Uvas" } },
+    { "id": "c7", "key": "orange", "face": { "label": "orange" } },
+    { "id": "c8", "key": "orange", "face": { "label": "🍊 Naranja" } }
+  ],
+  "rules": {
+    "shuffle": true,
+    "previewMs": 1200,
+    "timeLimitSeconds": 0,
+    "grid": { "cols": 4, "rows": 2 },
+    "scoring": { "threeStarsAttempts": 10, "twoStarsAttempts": 14 }
+  },
+  "feedback": {
+    "correct": ["¡Bien!", "Nice match!"],
+    "incorrect": ["Intenta recordar su posición."],
+    "complete": ["¡Completado! 🍎🍌🍇🍊"]
+  },
+  "hints": [
+    "Busca primero una fruta y su pareja.",
+    "Recuerda la posición si no coincide.",
+    "Piensa en filas o columnas."
+  ]
+}
